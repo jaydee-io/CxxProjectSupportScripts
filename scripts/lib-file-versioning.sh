@@ -73,10 +73,7 @@ function addFileVersion() {
     [ -n "${OPT_COMMIT}" ] && addToCommitMessage "* $(echo -e "${MESSAGE}" | sed $'s/\033\\[[^m]*m//g')"
 
     # Update version database
-    if [ ! -n "${OPT_DRY_RUN}" ] ; then
-        echo "${TIMESTAMP};${FILE_HASH};${FILE_RELATIVE_TO_ROOT_FS}" | cat - "${FILE_VERSIONS}" 2> /dev/null > "${FILE_VERSIONS}.new"
-        mv "${FILE_VERSIONS}.new" "${FILE_VERSIONS}"
-    fi
+    [ ! -n "${OPT_DRY_RUN}" ] && insertLineAt "${FILE_VERSIONS}" 1 "${TIMESTAMP};${FILE_HASH};${FILE_RELATIVE_TO_ROOT_FS}"
 
     # Add file to cmmit
     [ -n "${OPT_COMMIT}" ] && [ ! -n "${OPT_DRY_RUN}" ] && addFileTocommit "${DIR_BASE}" "${DIR_ROOT_FS_SHORT}/${FILE_RELATIVE_TO_ROOT_FS}"

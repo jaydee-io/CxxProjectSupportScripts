@@ -44,7 +44,7 @@ function usage() {
 function parseCommandLineOptions() {
     while [ $# -gt 0 ] ; do
         case $1 in
-            -p|--project) OPT_DIR_PROJECT="$2"; shift 1 ;;
+            -p|--project) OPT_DIR_PROJECT="$2"; OPT_NAME_PROJECT="$(basename ${OPT_DIR_PROJECT})"; shift 1 ;;
             -c|--commit)  OPT_COMMIT="yes" ;;
             -f|--force)   OPT_FORCE="yes" ;;
             -n|--dry-run) OPT_DRY_RUN="yes" ;;

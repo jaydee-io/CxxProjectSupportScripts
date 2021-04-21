@@ -7,10 +7,8 @@
 ################################################################################
 source "$(dirname "$0")/scripts/lib-global-constants.sh"
 source "${DIR_LIBS}/lib-utils.sh"
-source "${DIR_LIBS}/lib-file-versioning.sh"
 source "${DIR_LIBS}/lib-command-line-parsing.sh"
 source "${DIR_LIBS}/lib-commands.sh"
-source "${DIR_LIBS}/lib-file-versioning.sh"
 
 ################################################################################
 # Parse command line and check arguments
@@ -31,6 +29,7 @@ unset OPT_COMMANDS[0]
 case "$COMMAND" in
     "list")   commandList   "${OPT_COMMANDS[@]}" ;;
     "update") commandUpdate "${OPT_COMMANDS[@]}" ;;
+    "add")    commandAdd    "${OPT_COMMANDS[@]}" ;;
     *)        usage 1 "Unknown command '${COMMAND}'" ;;
 esac
 

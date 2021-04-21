@@ -10,15 +10,27 @@
 # (array name in $2)
 ################################################################################
 function isInList() {
+    local INDEX=$(getIndexInList "$1" "$2")
+
+    [ -n "${INDEX}" ] && return 0 || return 1
+}
+
+################################################################################
+# Print the index of the first value from an array (array name in $2),
+# matching the regular expression ($1) 
+################################################################################
+function getIndexInList() {
     local EXPR="$1"
     local LIST_NAME="$2"
     eval local LIST_VALUES=\( \${${LIST_NAME}[@]} \)
 
-    for VAL in "${LIST_VALUES[@]}" ; do
-        [[ "$VAL" =~ ^${EXPR}$ ]] && return 0
+    for I in "${!LIST_VALUES[@]}" ; do
+        local VAL="${LIST_VALUES[$I]}"
+        if [[ "$VAL" =~ ^${EXPR}$ ]] ; then
+            echo $I
+            return
+        fi
     done
-
-    return 1
 }
 
 ################################################################################
@@ -26,16 +38,16 @@ function isInList() {
 # is in the spécified list (list name in $2), otherwise exit with an error
 # message ($3).
 ################################################################################
-function checkItems() {
+function checkIsInList() {
     local PARAMS_NAME="$1"
     local LIST_NAME="$2"
-    local ERROR_MSG="$3"
+    local LIST_NAME_DESCRIPTION="$3"
     eval local PARAMS=\( \${${PARAMS_NAME}[@]} \)
 
     [ ${#PARAMS[@]} -le 0 ] && usage 1 "You must provide at least one item"
 
     for PARAM in "${PARAMS[@]}" ; do
-        ! isInList "${PARAM}" ${LIST_NAME} && usage 1 "'${PARAM}' is not ${ERROR_MSG}"
+        ! isInList "${PARAM}" ${LIST_NAME} && usage 1 "'${PARAM}' is not in ${LIST_NAME_DESCRIPTION} list"
     done
 }
 
@@ -45,7 +57,7 @@ function checkItems() {
 function maxSize() {
     local MAX_SIZE=0
     local LIST_NAME="$1"
-    eval local LIST_VALUES=\( \${${LIST_NAME}[@]} \)
+    eval local LIST_VALUES=\( \"\${${LIST_NAME}[@]}\" \)
 
     for I in "${!LIST_VALUES[@]}" ; do
         [ ${#LIST_VALUES[$I]} -gt ${MAX_SIZE} ] && MAX_SIZE=${#LIST_VALUES[$I]}
@@ -59,6 +71,19 @@ function maxSize() {
 ################################################################################
 function trimLeft() {
     echo "${1:$2}"
+}
+
+################################################################################
+# Insert a line of text ($3) in fiile ($1) at line ($2)
+################################################################################
+function insertLineAt() {
+    local FILE="$1"
+    local LINE="$2"
+    local TEXT="$3"
+
+    sed -e "${LINE}i\\
+${TEXT}
+" -i '' "${FILE}"
 }
 
 ################################################################################

@@ -36,7 +36,7 @@ export COL_BOLD="\033[1m"
 export COL_UNDERLINE="\033[4m"
 
 ################################################################################
-# Some globals
+# Commands
 ################################################################################
 ALL_COMMANDS=(
     "list"
@@ -54,6 +54,9 @@ ALL_COMMANDS_DESCRIPTION=(
     "Remove a project's item (Need arguments)"
 )
 
+################################################################################
+# Items
+################################################################################
 ALL_ITEMS=(
     "cmake-unittest"
     "readme-badge"
@@ -75,4 +78,35 @@ ALL_ADD_ITEMS=(
 )
 ALL_REMOVE_ITEMS=(
     "readme-badge"
+)
+
+################################################################################
+# Badges
+################################################################################
+ALL_BADGES=(
+    "github-license"
+    "github-release"
+    "travis-build"
+    "codecov"
+)
+
+ALL_BADGES_ALT_TEXT=(
+    "Github License"
+    "GitHub Release (latest by date)"
+    "Travis Build status"
+    "Codecov Code coverage"
+)
+
+ALL_BADGES_ICON=(
+    '/github/license/${GITHUB_USER}/${GITHUB_PROJECT}'
+    '/github/v/release/${GITHUB_USER}/${GITHUB_PROJECT}'
+    '/travis/${GITHUB_USER}/${GITHUB_PROJECT}'
+    '/codecov/c/github/${GITHUB_USER}/${GITHUB_PROJECT}?token=${CODECOV_TOKEN}'
+)
+
+ALL_BADGES_LINK=(
+    'https://github.com/${GITHUB_USER}/${GITHUB_PROJECT}/blob/main/LICENSE'
+    'https://github.com/${GITHUB_USER}/${GITHUB_PROJECT}/releases/latest'
+    'https://travis-ci.org/${GITHUB_USER}/${GITHUB_PROJECT}'
+    'https://codecov.io/gh/${GITHUB_USER}/${GITHUB_PROJECT}'
 )
