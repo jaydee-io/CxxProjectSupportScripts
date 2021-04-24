@@ -59,19 +59,23 @@ ALL_COMMANDS_DESCRIPTION=(
 ################################################################################
 ALL_ITEMS=(
     "cmake-unittest"
+    "cmake-code-coverage"
     "readme-badge"
 )
 
 ALL_ITEMS_DESCRIPTION=(
     "CMake file providing unit-testing"
+    "CMake file, script and config file providing code coverage"
     "Badges (Licence, version, build status, ...) on README.md (see http://shield.io)"
 )
 
 ALL_CREATE_ITEMS=(
     "cmake-unittest"
+    "cmake-code-coverage"
 )
 ALL_UPDATE_ITEMS=(
     "cmake-unittest"
+    "cmake-code-coverage"
 )
 ALL_ADD_ITEMS=(
     "readme-badge"

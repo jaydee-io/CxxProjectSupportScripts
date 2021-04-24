@@ -19,12 +19,11 @@ function updateProjectFile() {
         echo -e "${COL_RED}File '${FILE}' not found in database!${COL_RESET}"
         return 1
     fi
+    local FILE_LATEST_HASH_SHORT="${FILE_LATEST_HASH:0:8}"
+    local FILE_LATEST_DATE_READABLE="$(date -j -f %s "${FILE_LATEST_DATE}" +%d/%m/%Y)"
 
     # File exists in project, update
     if [ -n "${FILE_HASH}" ] ; then
-        local FILE_LATEST_HASH_SHORT="${FILE_LATEST_HASH:0:8}"
-        local FILE_LATEST_DATE_READABLE="$(date -j -f %s "${FILE_LATEST_DATE}" +%d/%m/%Y)"
-
         if getFileVersion "${FILE}" "${FILE_HASH}" FILE_DATE ; then
             local FILE_DATE_READABLE="$(date -j -f %s "${FILE_DATE}" +%d/%m/%Y)"
         else
@@ -33,11 +32,17 @@ function updateProjectFile() {
         MESSAGE="Updated file '${COL_GREEN}${FILE}${COL_RESET}' from version [${COL_YELLOW}${FILE_HASH_SHORT}${COL_RESET}] (${FILE_DATE_READABLE}) to [${COL_YELLOW}${FILE_LATEST_HASH_SHORT}${COL_RESET}] (${FILE_LATEST_DATE_READABLE})"
     # New file
     else
-        MESSAGE="Added new file '${COL_GREEN}${FILE}${COL_RESET}' with initial version [${COL_YELLOW}${FILE_HASH_SHORT}${COL_RESET}]"
+        MESSAGE="Added new file '${COL_GREEN}${FILE}${COL_RESET}' with initial version [${COL_YELLOW}${FILE_LATEST_HASH_SHORT}${COL_RESET}] (${FILE_LATEST_DATE_READABLE})"
     fi
 
     # Update file
-    [ ! -n "${OPT_DRY_RUN}" ] && cp "${DIR_ROOT_FS}/${FILE}" "${OPT_DIR_PROJECT}/${FILE}"
+    if [ ! -n "${OPT_DRY_RUN}" ] ; then
+        # Create directory first if it doesn't exists
+        local BASE_DIR=$(dirname "${OPT_DIR_PROJECT}/${FILE}")
+        mkdir -p "${BASE_DIR}"
+
+        cp "${DIR_ROOT_FS}/${FILE}" "${OPT_DIR_PROJECT}/${FILE}"
+    fi
 
     # Display and prepare commit message
     echo -e "${MESSAGE}"
@@ -85,7 +90,7 @@ function addFileVersion() {
 function hashFile() {
     local FILE="$1"
 
-    ${BIN_CHECKSUM} "${FILE}" | cut -d " " -f 1
+    [ -f "${FILE}" ] && ${BIN_CHECKSUM} "${FILE}" | cut -d " " -f 1
 }
 
 ################################################################################
@@ -99,6 +104,8 @@ function getFileLatestVersion() {
     [ ! -f "${FILE_VERSIONS}" ] && return 1
 
     local LINE="$(grep "${FILE}" "${FILE_VERSIONS}" | head -n 1)"
+    [ -z "${LINE}" ] && return 1
+
     eval $VAR_DATE=$(cut -d ";" -f 1 <<< "$LINE")
     eval $VAR_HASH=$(cut -d ";" -f 2 <<< "$LINE")
 

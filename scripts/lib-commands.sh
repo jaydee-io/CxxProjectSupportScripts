@@ -52,7 +52,14 @@ function commandUpdate() {
 
     for PARAM in "${PARAMS[@]}" ; do
         case "${PARAM}" in
-            cmake-unittest) updateProjectFile "cmake/UnitTest.cmake" ;;
+            cmake-unittest)
+                updateProjectFile "cmake/UnitTest.cmake"
+                ;;
+            cmake-code-coverage)
+                updateProjectFile "cmake/CodeCoverage.cmake"
+                updateProjectFile "codecov.yml"
+                updateProjectFile "scripts/uploadCoverage.sh"
+                ;;
         esac
     done
 }
