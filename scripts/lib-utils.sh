@@ -74,7 +74,7 @@ function trimLeft() {
 }
 
 ################################################################################
-# Insert a line of text ($3) in fiile ($1) at line ($2)
+# Insert a line of text ($3) in file ($1) at line ($2)
 ################################################################################
 function insertLineAt() {
     local FILE="$1"
@@ -84,6 +84,26 @@ function insertLineAt() {
     sed -e "${LINE}i\\
 ${TEXT}
 " -i '' "${FILE}"
+}
+
+################################################################################
+# Find all lines matching expression ($1) in file ($2) and print line numbers
+################################################################################
+function findAllLineNumbersMatching() {
+    local REGEXP="$1"
+    local FILE="$2"
+
+    grep -n -e "${REGEXP}" "${FILE}" | cut -d ":" -f 1
+}
+
+################################################################################
+# Find first line matching expression ($1) in file ($2) and print line number
+################################################################################
+function findFirstLineNumberMatching() {
+    local REGEXP="$1"
+    local FILE="$2"
+
+    findAllLineNumbersMatching "${REGEXP}" "${FILE}" | head -n 1
 }
 
 ################################################################################

@@ -38,12 +38,12 @@ function setBadgesFile() {
 # Get badge tag line numbers in badge file, if present (otherwise return 1)
 ################################################################################
 function getBadgeTagsLines() {
-    local LINE_BEGIN=$(grep -n -e "${TAG_BADGES_BEGIN}" "${BADGE_FILE}" | head -n 1 | cut -d ":" -f 1)
-    local LINE_END=$(  grep -n -e "${TAG_BADGES_END}"   "${BADGE_FILE}" | head -n 1 | cut -d ":" -f 1)
+    local LINE_BEGIN=$(findFirstLineNumberMatching "${TAG_BADGES_BEGIN}" "${BADGE_FILE}")
+    local LINE_END=$(  findFirstLineNumberMatching "${TAG_BADGES_END}"   "${BADGE_FILE}")
 
     ([ -z "${LINE_BEGIN}" ] || [ -z "${LINE_END}" ]) && return 1
 
-    LINE_INSERT_BADGE=$((${LINE_END} - 1))
+    LINE_INSERT_BADGE="${LINE_END}"
     return 0
 }
 
