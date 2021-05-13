@@ -42,6 +42,15 @@ function appendFilenameFilters() {
 }
 
 ################################################################################
+# Check if source file ($1) need formatting
+################################################################################
+function needFormatting() {
+    local FILE="$1"
+
+    [ $(clang-format --style=file --output-replacements-xml "${FILE}" | wc -l) -gt 3 ]
+}
+
+################################################################################
 # Parse arguments
 ################################################################################
 while [ $# -gt 0 ] ; do
@@ -66,6 +75,10 @@ done
 # Main
 ################################################################################
 for FILE in $(find ${OPT_DIRECTORY} ${FILE_FILTERS[@]}) ; do
-    printf "[\033[33mFORMAT\033[0m] %s\n" "${FILE}"
-    [ ! -n "${OPT_DRY_RUN}" ] && clang-format --style=file -i "${FILE}"
+    if needFormatting "${FILE}" ; then
+        printf "[\033[33mFORMAT\033[0m] %s\n" "${FILE}"
+        [ ! -n "${OPT_DRY_RUN}" ] && clang-format --style=file -i "${FILE}"
+    else
+        printf "[\033[32m  OK  \033[0m] %s\n" "${FILE}"
+    fi
 done
