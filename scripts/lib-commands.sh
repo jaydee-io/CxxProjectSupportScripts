@@ -53,6 +53,11 @@ function commandUpdate() {
 
     for PARAM in "${PARAMS[@]}" ; do
         case "${PARAM}" in
+            clang-format)
+                getGithubUserAndProject "${OPT_DIR_PROJECT}"
+                updateProjectFile          "scripts/formatCode.sh"
+                updateTemplatedProjectFile ".clang-format"
+                ;;
             cmake-unittest)
                 updateProjectFile "cmake/UnitTest.cmake"
                 ;;

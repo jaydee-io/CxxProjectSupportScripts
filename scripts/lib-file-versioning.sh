@@ -6,6 +6,11 @@
 ################################################################################
 
 ################################################################################
+# Globals
+################################################################################
+TAG_TEMPLATE="TAG TEMPLATE"
+
+################################################################################
 # Update project file ($1)
 ################################################################################
 function updateProjectFile() {
@@ -17,7 +22,7 @@ function updateProjectFile() {
         echo -e "${COL_RED}File '${FILE_ID}' not found in database!${COL_RESET}"
         return 1
     fi
-
+    
     # Pepare and display commit message
     prepareAndPrintCommitMessage "${FILE_ID}" "${FILE_HASH}" "${FILE_LATEST_HASH}" "${FILE_LATEST_DATE}"
 
@@ -27,7 +32,44 @@ function updateProjectFile() {
 
         # Add file to commit
         [ -n "${OPT_COMMIT}" ] && addFileTocommit "${OPT_DIR_PROJECT}" "${FILE_ID}"
-        fi
+    fi
+}
+
+################################################################################
+# Update templated project file ($1)
+################################################################################
+function updateTemplatedProjectFile() {
+    local FILE_ID="$1"
+    local FILE_IN_PROJECT="${OPT_DIR_PROJECT}/${FILE_ID}"
+    local FILE_TMP="$(mktemp)"
+
+    # Get file lastest version (hash) and date
+    if ! getFileLatestVersion "${FILE_ID}" FILE_LATEST_HASH FILE_LATEST_DATE ; then
+        echo -e "${COL_RED}File '${FILE_ID}' not found in database!${COL_RESET}"
+        return 1
+    fi
+
+    # Restore project instanciated file into temporary file and get hash
+    if [ -f "${FILE_IN_PROJECT}" ] ; then
+        cp "${FILE_IN_PROJECT}" "${FILE_TMP}"
+        restoreTemplatedFile "${FILE_TMP}"
+        FILE_HASH="$(hashFile "${FILE_TMP}")"
+        rm -f "${FILE_TMP}"
+    fi
+
+    # Pepare and display commit message
+    prepareAndPrintCommitMessage "${FILE_ID}" "${FILE_HASH}" "${FILE_LATEST_HASH}" "${FILE_LATEST_DATE}"
+
+    if [ ! -n "${OPT_DRY_RUN}" ] ; then
+        # Update file
+        copyReferenceFileToProject "${FILE_ID}"
+
+        # Instanciate template
+        affectTemplateVariableInFile "${FILE_IN_PROJECT}" PROJECT "${GITHUB_PROJECT}"
+
+        # Add file to commit
+        [ -n "${OPT_COMMIT}" ] && addFileTocommit "${OPT_DIR_PROJECT}" "${FILE_ID}"
+    fi
 }
 
 ################################################################################
@@ -161,4 +203,26 @@ function copyReferenceFileToProject() {
 
     # Copy the file
     cp "${DIR_ROOT_FS}/${FILE_ID}" "${OPT_DIR_PROJECT}/${FILE_ID}"
+}
+
+################################################################################
+# Restore templated file ($1)
+################################################################################
+function restoreTemplatedFile() {
+    local FILE="$1"
+
+    # Insert template line and remove instanciated one
+    sedInplace -e "s/^\(.*${TAG_TEMPLATE}:\(.*\)\)$/\1\n\2/" -e "/${TAG_TEMPLATE}/{n;d;}" "${FILE}"
+}
+
+################################################################################
+# Instanciate templated file ($1)
+################################################################################
+function affectTemplateVariableInFile() {
+    local FILE="$1"
+    local VAR_NAME="$2"
+    local VAR_VALUE="$3"
+
+    # Insert template line and remove particularized one
+    sedInplace -e "/${TAG_TEMPLATE}/n" -e "s#\[<${VAR_NAME}>\]#${VAR_VALUE}#" "${FILE}"
 }
