@@ -22,6 +22,9 @@ function updateProjectFile() {
         echo -e "${COL_RED}File '${FILE_ID}' not found in database!${COL_RESET}"
         return 1
     fi
+
+    # Check if file is up to date
+    isFileUpToDate "${FILE_ID}" "${FILE_HASH}" "${FILE_LATEST_HASH}" "${FILE_LATEST_DATE}" && return    
     
     # Pepare and display commit message
     prepareAndPrintCommitMessage "${FILE_ID}" "${FILE_HASH}" "${FILE_LATEST_HASH}" "${FILE_LATEST_DATE}"
@@ -56,6 +59,9 @@ function updateTemplatedProjectFile() {
         FILE_HASH="$(hashFile "${FILE_TMP}")"
         rm -f "${FILE_TMP}"
     fi
+
+    # Check if file is up to date
+    isFileUpToDate "${FILE_ID}" "${FILE_HASH}" "${FILE_LATEST_HASH}" "${FILE_LATEST_DATE}" && return
 
     # Pepare and display commit message
     prepareAndPrintCommitMessage "${FILE_ID}" "${FILE_HASH}" "${FILE_LATEST_HASH}" "${FILE_LATEST_DATE}"
@@ -92,6 +98,9 @@ function addFileVersion() {
     else
         MESSAGE="Add new file '${COL_GREEN}${FILE_RELATIVE_TO_ROOT_FS}${COL_RESET}' with initial version [${COL_YELLOW}${FILE_HASH_SHORT}${COL_RESET}]"
     fi
+
+    # Check if file is up to date
+    isFileUpToDate "${FILE}" "${FILE_HASH}" "${FILE_LATEST_HASH}" "${FILE_LATEST_DATE}" && return
 
     # Display and prepare commit message
     echo -e "${MESSAGE}"
@@ -166,7 +175,26 @@ function getFileReadableDate() {
 }
 
 ################################################################################
-# Prepare a commit message composed from file name ($1), file hash ($2), short
+# Check if file ($1) is already up to date by comparing current file hash ($2),
+# and hash of latest version of the file ($3)
+# If so, print a message with date (timestamp in $4) of latest version
+################################################################################
+function isFileUpToDate() {
+    local FILE="$1"
+    local HASH="$2"
+    local LATEST_HASH="$3"
+    local LATEST_DATE_READABLE="$(timestampToDate "$4")"
+
+    if [ "${LATEST_HASH}" == "${HASH}" ] ; then
+        echo -e "File '${COL_GREEN}${FILE}${COL_RESET}' is already up to date (Version [${COL_YELLOW}${HASH:0:8}${COL_RESET}] from ${LATEST_DATE_READABLE})"
+        return 0
+    else
+        return 1
+    fi
+}
+
+################################################################################
+# Prepare a commit message composed from file name ($1), current file hash ($2),
 # hash ($3) and date (timestamp in $4) of latest version of the file 
 ################################################################################
 function prepareAndPrintCommitMessage() {
