@@ -13,19 +13,6 @@ TAG_BADGES_END="END   BADGES"
 BASE_URL_SHIELD="https://img.shields.io"
 BADGE_FILE=""
 LINE_INSERT_BADGE="0"
-GITHUB_USER=""
-GITHUB_PROJECT=""
-
-################################################################################
-# Get Github user and project names from project repository ($1)
-################################################################################
-function getGithubUserAndProject() {
-    local DIR_GIT_REPO="$1"
-    local GITHUB_REMOTE=$(git -C "${DIR_GIT_REPO}" remote -v | grep "github.com" | head -n 1 | sed "s#.*git@github\.com:\(.*\)/\(.*\).git.*#\1 \2#")
-
-    GITHUB_USER=$(cut -d " " -f 1 <<< "${GITHUB_REMOTE}")
-    GITHUB_PROJECT=$(cut -d " " -f 2 <<< "${GITHUB_REMOTE}")
-}
 
 ################################################################################
 # Set file ($1) to insert badge into
@@ -72,7 +59,7 @@ function addBadge() {
     # Display and prepare commit message
     MESSAGE="Add badge '${COL_GREEN}${BADGE_ALT_TEXT}${COL_RESET}' to '${COL_YELLOW}${BADGE_FILE}${COL_RESET}'"
     echo -e "${MESSAGE}"
-    [ -n "${OPT_COMMIT}" ] && addToCommitMessage "* $(echo -e "${MESSAGE}" | sed $'s/\033\\[[^m]*m//g')"
+    [ -n "${OPT_COMMIT}" ] && addToCommitMessage "* $(filterColor "${MESSAGE}")"
 
     # Insert badge
     [ ! -n "${OPT_DRY_RUN}" ] && insertLineAt "${BADGE_FILE}" "${LINE_INSERT_BADGE}" "[![${BADGE_ALT_TEXT}](${BASE_URL_SHIELD}${BADGE_ICON})](${BADGE_LINK})"

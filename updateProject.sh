@@ -19,7 +19,7 @@ checkArguments
 ################################################################################
 # Prepare commit message
 ################################################################################
-[ -n "${OPT_COMMIT}" ] && [ ! -f "${FILE_COMMIT_MSG}" ] && addToCommitMessage "Updated configuration files\n\nList of changes:"
+[ -n "${OPT_COMMIT}" ] && [ ! -n "${OPT_DRY_RUN}" ] && [ ! -f "${FILE_COMMIT_MSG}" ] && addToCommitMessage "Updated configuration files\n\nList of changes:"
 
 ################################################################################
 # Process command

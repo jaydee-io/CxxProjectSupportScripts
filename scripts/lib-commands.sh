@@ -6,6 +6,7 @@
 ################################################################################
 source "${DIR_LIBS}/lib-file-versioning.sh"
 source "${DIR_LIBS}/lib-badges.sh"
+source "${DIR_LIBS}/lib-utils.sh"
 
 ################################################################################
 # Print all available commands

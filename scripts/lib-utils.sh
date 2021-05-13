@@ -6,6 +6,29 @@
 ################################################################################
 
 ################################################################################
+# Globals
+################################################################################
+GITHUB_USER=""
+GITHUB_PROJECT=""
+
+################################################################################
+# Portable version of sed inline replacement
+################################################################################
+function sedInplace() {
+    case $(sed --help 2>&1) in
+        *GNU*) sed -i "$@"    ;;
+        *)     sed -i '' "$@" ;;
+    esac
+}
+
+################################################################################
+# Print arguments filtered from any color
+################################################################################
+function filterColor() {
+    echo -e "$@" | sed $'s/\033\\[[^m]*m//g'
+}
+
+################################################################################
 # Check if a regular expression ($1) match a least one value from an array
 # (array name in $2)
 ################################################################################
@@ -81,9 +104,9 @@ function insertLineAt() {
     local LINE="$2"
     local TEXT="$3"
 
-    sed -e "${LINE}i\\
+    sedInplace -e "${LINE}i\\
 ${TEXT}
-" -i '' "${FILE}"
+" "${FILE}"
 }
 
 ################################################################################
@@ -139,4 +162,22 @@ function commitChanges() {
 ################################################################################
 function removeCommitMessageFile() {
     rm -f "${FILE_COMMIT_MSG}"
+}
+
+################################################################################
+# Get Github user and project names from project repository ($1)
+################################################################################
+function getGithubUserAndProject() {
+    local DIR_GIT_REPO="$1"
+    local GITHUB_REMOTE=$(git -C "${DIR_GIT_REPO}" remote -v | grep "github.com" | head -n 1 | sed "s#.*git@github\.com:\(.*\)/\(.*\).git.*#\1 \2#")
+
+    GITHUB_USER=$(cut -d " " -f 1 <<< "${GITHUB_REMOTE}")
+    GITHUB_PROJECT=$(cut -d " " -f 2 <<< "${GITHUB_REMOTE}")
+}
+
+################################################################################
+# Print human readable date from timestamp ($1)
+################################################################################
+function timestampToDate() {
+    date -j -f %s "$1" +%d/%m/%Y
 }

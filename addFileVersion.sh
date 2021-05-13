@@ -107,7 +107,7 @@ done
 [ ${#FILES_TO_ADD[@]} -eq 0 ] && FILES_TO_ADD=( $(gitListFilesToAdd) )
 
 # Prepare commit message
-[ -n "${OPT_COMMIT}" ] && [ ! -f "${FILE_COMMIT_MSG}" ] && addToCommitMessage "Updated configuration files\n\nList of changes:"
+[ -n "${OPT_COMMIT}" ] && [ ! -n "${OPT_DRY_RUN}" ] && [ ! -f "${FILE_COMMIT_MSG}" ] && addToCommitMessage "Updated configuration files\n\nList of changes:"
 
 # Process each file
 for FILE in "${FILES_TO_ADD[@]}" ; do
