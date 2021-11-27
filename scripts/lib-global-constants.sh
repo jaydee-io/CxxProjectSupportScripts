@@ -108,13 +108,13 @@ ALL_BADGES_ALT_TEXT=(
 ALL_BADGES_ICON=(
     '/github/license/${GITHUB_USER}/${GITHUB_PROJECT}'
     '/github/v/release/${GITHUB_USER}/${GITHUB_PROJECT}'
-    '/travis/${GITHUB_USER}/${GITHUB_PROJECT}'
+    '/travis/com/${GITHUB_USER}/${GITHUB_PROJECT}'
     '/codecov/c/github/${GITHUB_USER}/${GITHUB_PROJECT}?token=${CODECOV_TOKEN}'
 )
 
 ALL_BADGES_LINK=(
     'https://github.com/${GITHUB_USER}/${GITHUB_PROJECT}/blob/main/LICENSE'
     'https://github.com/${GITHUB_USER}/${GITHUB_PROJECT}/releases/latest'
-    'https://travis-ci.org/${GITHUB_USER}/${GITHUB_PROJECT}'
+    'https://app.travis-ci.com/github/${GITHUB_USER}/${GITHUB_PROJECT}'
     'https://codecov.io/gh/${GITHUB_USER}/${GITHUB_PROJECT}'
 )
