@@ -54,7 +54,7 @@ macro(enable_code_coverage)
     add_custom_command(TARGET code-coverage-all
         POST_BUILD
         COMMAND ;
-        COMMENT "Open ${CODE_COVERAGE_OUTPUT_DIRECTORY}/all-merged/index.html in your browser to view the coverage report."
+        COMMENT "Open file://${CODE_COVERAGE_OUTPUT_DIRECTORY}/all-merged/index.html in your browser to view the coverage report."
     )
 endmacro()
 
@@ -164,6 +164,11 @@ function(target_code_coverage TARGET_NAME)
                 DEPENDS code-coverage-processing-${TARGET_CODE_COVERAGE_COVERAGE_TARGET_NAME}
             )
 
+            # Clean coverage files for this target
+            add_custom_target(code-coverage-clean-${TARGET_CODE_COVERAGE_COVERAGE_TARGET_NAME}
+                COMMAND rm -fr ${CODE_COVERAGE_OUTPUT_DIRECTORY}/${TARGET_CODE_COVERAGE_COVERAGE_TARGET_NAME}
+            )
+
         elseif(CODE_COVERAGE_WITH_GCC)
             set(COVERAGE_INFO "${CODE_COVERAGE_OUTPUT_DIRECTORY}/${TARGET_CODE_COVERAGE_COVERAGE_TARGET_NAME}.info")
 
@@ -201,17 +206,24 @@ function(target_code_coverage TARGET_NAME)
                 COMMAND ${CODE_COVERAGE_GENHTML_PATH} --demangle-cpp -o ${CODE_COVERAGE_OUTPUT_DIRECTORY}/${TARGET_CODE_COVERAGE_COVERAGE_TARGET_NAME} ${COVERAGE_INFO}
                 DEPENDS code-coverage-capture-${TARGET_CODE_COVERAGE_COVERAGE_TARGET_NAME}
             )
+
+            # Clean coverage files for this target
+            add_custom_target(code-coverage-clean-${TARGET_CODE_COVERAGE_COVERAGE_TARGET_NAME}
+                COMMAND rm -f  ${CODE_COVERAGE_OUTPUT_DIRECTORY}/${TARGET_CODE_COVERAGE_COVERAGE_TARGET_NAME}.info
+                COMMAND rm -fr ${CODE_COVERAGE_OUTPUT_DIRECTORY}/${TARGET_CODE_COVERAGE_COVERAGE_TARGET_NAME}
+            )
         endif()
 
         add_custom_command(TARGET code-coverage-${TARGET_CODE_COVERAGE_COVERAGE_TARGET_NAME}
             POST_BUILD
             COMMAND ;
-            COMMENT "Open ${CODE_COVERAGE_OUTPUT_DIRECTORY}/${TARGET_CODE_COVERAGE_COVERAGE_TARGET_NAME}/index.html in your browser to view the coverage report."
+            COMMENT "Open file://${CODE_COVERAGE_OUTPUT_DIRECTORY}/${TARGET_CODE_COVERAGE_COVERAGE_TARGET_NAME}/index.html in your browser to view the coverage report."
         )
 
         # Add to global targets
         add_dependencies(code-coverage-all-processing code-coverage-run-${TARGET_CODE_COVERAGE_COVERAGE_TARGET_NAME})
         add_dependencies(code-coverage code-coverage-${TARGET_CODE_COVERAGE_COVERAGE_TARGET_NAME})
+        add_dependencies(code-coverage-clean code-coverage-clean-${TARGET_CODE_COVERAGE_COVERAGE_TARGET_NAME})
         if(CODE_COVERAGE_WITH_CLANG)
             add_dependencies(code-coverage-report code-coverage-report-${TARGET_CODE_COVERAGE_COVERAGE_TARGET_NAME})
         endif()
@@ -244,11 +256,15 @@ macro(setup_coverage_with_llvmcov)
         message(FATAL_ERROR "Code coverage error: 'llvm-profdata' not found! Aborting.")
     endif()
 
+    set(GLOBAL_COVERAGE_INFO "${CODE_COVERAGE_OUTPUT_DIRECTORY}/all-merged.profdata")
+
     # Clean coverage
     add_custom_target(code-coverage-clean
-        COMMAND rm -f ${CODE_COVERAGE_OUTPUT_DIRECTORY}/binaries.list
-        COMMAND rm -f ${CODE_COVERAGE_OUTPUT_DIRECTORY}/profraw.list
-        COMMAND rm -f ${CODE_COVERAGE_OUTPUT_DIRECTORY}/exclude_regex.list
+        COMMAND rm -f  ${CODE_COVERAGE_OUTPUT_DIRECTORY}/binaries.list
+        COMMAND rm -f  ${CODE_COVERAGE_OUTPUT_DIRECTORY}/profraw.list
+        COMMAND rm -f  ${CODE_COVERAGE_OUTPUT_DIRECTORY}/exclude_regex.list
+        COMMAND rm -f  ${GLOBAL_COVERAGE_INFO}
+        COMMAND rm -fr ${CODE_COVERAGE_OUTPUT_DIRECTORY}/all-merged
     )
 
     # Global report target
@@ -260,7 +276,7 @@ macro(setup_coverage_with_llvmcov)
     # Merge the profile data for all of the run executables
     add_custom_target(code-coverage-all-processing
         COMMAND ${CODE_COVERAGE_LLVM_PROFDATA_PATH} merge
-            -o ${CODE_COVERAGE_OUTPUT_DIRECTORY}/all-merged.profdata
+            -o ${GLOBAL_COVERAGE_INFO}
             -sparse
             `cat ${CODE_COVERAGE_OUTPUT_DIRECTORY}/profraw.list`
     )
@@ -269,7 +285,7 @@ macro(setup_coverage_with_llvmcov)
     add_custom_target(code-coverage-all-report
         COMMAND ${CODE_COVERAGE_LLVM_COV_PATH} report
             `cat ${CODE_COVERAGE_OUTPUT_DIRECTORY}/binaries.list`
-            -instr-profile=${CODE_COVERAGE_OUTPUT_DIRECTORY}/all-merged.profdata
+            -instr-profile=${GLOBAL_COVERAGE_INFO}
             `cat ${CODE_COVERAGE_OUTPUT_DIRECTORY}/exclude_regex.list`
         DEPENDS code-coverage-all-processing
     )
@@ -277,17 +293,27 @@ macro(setup_coverage_with_llvmcov)
     # Export coverage information so continuous integration tools (e.g. Jenkins) can consume it
     add_custom_target(code-coverage-all-export
         COMMAND ${CODE_COVERAGE_LLVM_COV_PATH} export `cat ${CODE_COVERAGE_OUTPUT_DIRECTORY}/binaries.list`
-            -instr-profile=${CODE_COVERAGE_OUTPUT_DIRECTORY}/all-merged.profdata
+            -instr-profile=${GLOBAL_COVERAGE_INFO}
             -format="text"
             `cat ${CODE_COVERAGE_OUTPUT_DIRECTORY}/exclude_regex.list`
             > ${CODE_COVERAGE_OUTPUT_DIRECTORY}/coverage.json
         DEPENDS code-coverage-all-processing
     )
 
+    # Export coverage information so continuous integration tools (e.g. Jenkins) can consume it
+    add_custom_target(code-coverage-all-export-lcov
+        COMMAND ${CODE_COVERAGE_LLVM_COV_PATH} export `cat ${CODE_COVERAGE_OUTPUT_DIRECTORY}/binaries.list`
+            -instr-profile=${GLOBAL_COVERAGE_INFO}
+            -format="lcov"
+            `cat ${CODE_COVERAGE_OUTPUT_DIRECTORY}/exclude_regex.list`
+            > ${CODE_COVERAGE_OUTPUT_DIRECTORY}/lcov.info
+        DEPENDS code-coverage-all-processing
+    )
+
     # Generate HTML output of all added targets for perusal
     add_custom_target(code-coverage-all
         COMMAND ${CODE_COVERAGE_LLVM_COV_PATH} show `cat ${CODE_COVERAGE_OUTPUT_DIRECTORY}/binaries.list`
-            -instr-profile=${CODE_COVERAGE_OUTPUT_DIRECTORY}/all-merged.profdata
+            -instr-profile=${GLOBAL_COVERAGE_INFO}
             -show-line-counts-or-regions
             -output-dir=${CODE_COVERAGE_OUTPUT_DIRECTORY}/all-merged
             -format="html"
@@ -309,13 +335,15 @@ macro(setup_coverage_with_gcov)
         message(FATAL_ERROR "Code coverage error: 'genhtml' not found! Aborting.")
     endif()
 
+    set(GLOBAL_COVERAGE_INFO "${CODE_COVERAGE_OUTPUT_DIRECTORY}/all-merged.info")
+
     # Clean coverage
     add_custom_target(code-coverage-clean
         COMMAND ${CODE_COVERAGE_LCOV_PATH} --directory ${CMAKE_BINARY_DIR} --zerocounters
-        COMMAND rm -f ${CODE_COVERAGE_OUTPUT_DIRECTORY}/exclude_regex.list
+        COMMAND rm -f  ${CODE_COVERAGE_OUTPUT_DIRECTORY}/exclude_regex.list
+        COMMAND rm -f  ${GLOBAL_COVERAGE_INFO}
+        COMMAND rm -fr ${CODE_COVERAGE_OUTPUT_DIRECTORY}/all-merged
     )
-    
-    set(GLOBAL_COVERAGE_INFO "${CODE_COVERAGE_OUTPUT_DIRECTORY}/all-merged.info")
 
     # Nothing required for gcov
     add_custom_target(code-coverage-all-processing COMMAND ;)
