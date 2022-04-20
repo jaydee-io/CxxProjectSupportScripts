@@ -22,29 +22,33 @@ endif()
 message(STATUS "Enabling unit tests for '${CMAKE_PROJECT_NAME}': yes")
 
 macro(find_googletest)
-    # First, try the system wide installation
-    find_package(GTest)
-    if(GTEST_FOUND)
+    cmake_parse_arguments(LOCAL "" "GOOGLETEST_VERSION" "" ${ARGN})
+
+    # If user don't specify a particular version, try the system wide installation
+    if(NOT DEFINED LOCAL_GOOGLETEST_VERSION)
+        find_package(GTest)
         set(UNIT_TESTS_LIBS GTest::GTest GTest::Main CACHE INTERNAL "INTERNAL Unit tests libraries to link")
-    # If not available, try fetching from github
-    else()
-        message(STATUS "Fetching GoogleTest from GitHub")
+    endif()
+
+    # If system wide installation isn't available or if user specified a particular version, try fetching from github
+    if(NOT GTEST_FOUND OR DEFINED LOCAL_GOOGLETEST_VERSION)
+        message(STATUS "Fetching GoogleTest (${LOCAL_GOOGLETEST_VERSION}) from GitHub")
         include(FetchContent)
 
         FetchContent_Declare(
             googletest
             GIT_REPOSITORY https://github.com/google/googletest.git
-            GIT_TAG        release-1.11.0
+            GIT_TAG        ${LOCAL_GOOGLETEST_VERSION}
             GIT_SHALLOW    ON
             GIT_PROGRESS   ON
         )
-        
+
         FetchContent_GetProperties(googletest)
         if(NOT googletest_POPULATED)
             FetchContent_Populate(googletest)
             add_subdirectory(${googletest_SOURCE_DIR} ${googletest_BINARY_DIR})
         endif()
-        message(STATUS "Fetching GoogleTest from GitHub - done")
+        message(STATUS "Fetching GoogleTest (${LOCAL_GOOGLETEST_VERSION}) from GitHub - done")
 
         include(GoogleTest)
         set(UNIT_TESTS_LIBS gtest gmock gtest_main CACHE INTERNAL "INTERNAL Unit tests libraries to link")
@@ -52,7 +56,7 @@ macro(find_googletest)
 endmacro()
 
 macro(enable_unit_test)
-    find_googletest()
+    find_googletest(${ARGN})
     enable_testing()
 endmacro()
 
