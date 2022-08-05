@@ -61,6 +61,7 @@ ALL_ITEMS=(
     "clang-format"
     "cmake-unittest"
     "cmake-code-coverage"
+    "github-actions"
     "readme-badge"
 )
 
@@ -68,6 +69,7 @@ ALL_ITEMS_DESCRIPTION=(
     "Code formatting rules and scripts"
     "CMake file providing unit-testing"
     "CMake file, script and config file providing code coverage"
+    "GitHub Action files for (Ubuntu, macOs and Windows) build and coverage"
     "Badges (Licence, version, build status, ...) on README.md (see http://shield.io)"
 )
 
@@ -75,11 +77,13 @@ ALL_CREATE_ITEMS=(
     "clang-format"
     "cmake-unittest"
     "cmake-code-coverage"
+    "github-actions"
 )
 ALL_UPDATE_ITEMS=(
     "clang-format"
     "cmake-unittest"
     "cmake-code-coverage"
+    "github-actions"
 )
 ALL_ADD_ITEMS=(
     "readme-badge"

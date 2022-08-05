@@ -18,7 +18,7 @@ function commandList() {
     for I in "${!ALL_COMMANDS[@]}" ; do
         printf "      ${COL_YELLOW}%-${MAX_SIZE}s${COL_RESET}   %s\n" "${ALL_COMMANDS[${I}]}" "${ALL_COMMANDS_DESCRIPTION[${I}]}"
     done
-    
+
     # Command items
     local MAX_SIZE=$(maxSize ALL_ITEMS)
     echo
@@ -48,7 +48,7 @@ function commandList() {
 ################################################################################
 function commandUpdate() {
     local PARAMS=("$@")
-    
+
     checkIsInList PARAMS ALL_UPDATE_ITEMS "updatable items"
 
     for PARAM in "${PARAMS[@]}" ; do
@@ -66,6 +66,12 @@ function commandUpdate() {
                 updateProjectFile "codecov.yml"
                 updateProjectFile "scripts/uploadCoverage.sh"
                 ;;
+            github-actions)
+                updateProjectFile ".github/workflows/build-windows.yml"
+                updateProjectFile ".github/workflows/build-ubuntu.yml"
+                updateProjectFile ".github/workflows/build-macos.yml"
+                updateProjectFile ".github/workflows/coverage.yml"
+                ;;
         esac
     done
 }
@@ -77,7 +83,7 @@ function commandAdd() {
     local ITEM="$1"
     shift 1
     local PARAMS=("$@")
-    
+
     checkIsInList ITEM ALL_ADD_ITEMS "addable items"
 
     case "${ITEM}" in
@@ -85,7 +91,7 @@ function commandAdd() {
             getGithubUserAndProject "${OPT_DIR_PROJECT}"
             setBadgesFile "${OPT_DIR_PROJECT}/README.md"
             getBadgeTagsLines || addBadgeTags 3
-            
+
             for BADGE in "${PARAMS[@]}" ; do
                 checkIsInList BADGE ALL_BADGES "badges"
                 addBadge "${BADGE}"
