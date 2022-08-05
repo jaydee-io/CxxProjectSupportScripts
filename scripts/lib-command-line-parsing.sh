@@ -58,8 +58,10 @@ function parseCommandLineOptions() {
 }
 
 function checkArguments () {
+    [ ${#OPT_COMMANDS[*]} -eq 0 ] && usage 1 "Missing command"
+
+    [ "${OPT_COMMANDS[0]}" == "list" ] && return
+
     [   -z "$OPT_DIR_PROJECT" ]       && usage 1 "Missing project directory (with -p, --project option)"
     [ ! -d "$OPT_DIR_PROJECT" ]       && usage 1 "Project argument is not a directory '$OPT_DIR_PROJECT'"
-
-    [ ${#OPT_COMMANDS[*]} -eq 0 ] && usage 1 "Missing command"
 }
