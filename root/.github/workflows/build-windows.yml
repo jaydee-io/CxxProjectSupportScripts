@@ -1,0 +1,66 @@
+################################################################################################################################
+# /!\ THIS IS AN EARLY WORK IN PROGRESS /!\
+################################################################################################################################
+name: Build on Windows
+
+on:
+  push:
+    branches: [ github-action ]
+  pull_request:
+    branches: [ github-action ]
+
+jobs:
+  msvc:
+    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # build-type: [ Debug, Release ]
+        build-type: [ Release ]
+        # compiler-version: [ '10 2010', '11 2012', '12 2013', '14 2015', '15 2017', '16 2019', '17 2022' ]
+        # compiler-version: [ '10', '11', '12', '14', '15', '16', '17' ]
+        compiler-version: [ '16', '17' ]
+        # architecture: [Win32, x64]
+        architecture: [Win32]
+
+    steps:
+      - name: Download MSVC build tools ${{matrix.compiler-version}}
+        run: Invoke-webrequest -uri  https://aka.ms/vs/${{matrix.compiler-version}}/release/vs_buildtools.exe -OutFile vs_buildtools.exe
+        shell: powershell
+      - name: Install MSVC build tools ${{matrix.compiler-version}}
+        run: |
+          .\vs_buildtools.exe --wait --norestart --passive --includeOptional --includeRecommended  --installPath "C:\MSVC"
+          vswhere.exe /?
+          vswhere.exe -all -legacy
+          dir "C:\Program Files\Microsoft Visual Studio"
+          dir "C:\MSVC"
+          dir "C:\MSVC\MSBuild"
+          dir "C:\MSVC\MSBuild\Current"
+        # run: .\vs_buildtools.exe --wait --norestart --passive --installPath "C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools" --includeOptional --includeRecommended --add Microsoft.VisualStudio.Workload.ManagedDesktopBuildTools --add Microsoft.VisualStudio.Workload.MSBuildTools --add Microsoft.VisualStudio.Workload.NativeDesktop --add Microsoft.VisualStudio.Workload.NetCoreTools
+        shell: cmd
+      - name: set MSBuildSDKsPath env variable
+        run: echo ::set-env name=MSBuildSDKsPath::"C:\MSVC\MSBuild"
+        # run: echo ::set-env name=MSBuildSDKsPath::"C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\MSBuild\Sdks"
+      - name: Select MSVC version
+        uses: microsoft/setup-msbuild@v1.1
+        with:
+          vs-version: '${{matrix.compiler-version}}'
+      - name: Install pcap
+        run: vcpkg install winpcap
+      - name: Find pcap
+        shell: sh
+        run: |
+          ls -lh /
+          ls -lh /vcpkg
+          tree /vcpkg
+      - name: Checkout sources
+        uses: actions/checkout@v3
+      - name: List CMake generators
+        run: cmake --help
+      - name: Configure CMake
+        run: cmake -B ${{github.workspace}}/build -G "Visual Studio ${{matrix.compiler-version}}" -A ${{ matrix.architecture }} -DCMAKE_BUILD_TYPE=${{matrix.build-type}} -DBITS_BUILD_TESTS=ON
+      - name: Build
+        run: cmake --build ${{github.workspace}}/build --config ${{ matrix.build-type }} --parallel
+      - name: Test
+        working-directory: ${{github.workspace}}/build
+        run: ctest --output-on-failure

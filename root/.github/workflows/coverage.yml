@@ -1,0 +1,28 @@
+name: Code coverage
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  coverage:
+    runs-on: ubuntu-latest
+    env:
+      CC: "gcc-10"
+      CXX: "g++-10"
+    steps:
+      - name: Install environment
+        run: sudo apt-get install -y lcov
+      - name: Checkout sources
+        uses: actions/checkout@v3
+      - name: Configure CMake
+        run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=Debug -DBITS_CODE_COVERAGE=ON
+      - name: Run tests for coverage report
+        run: cmake --build ${{github.workspace}}/build --target code-coverage-all
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v2
+        with:
+          fail_ci_if_error: true
+          files: ${{github.workspace}}/build/code-coverage/all-merged.info
